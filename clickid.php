@@ -7,8 +7,6 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 /* --- Config --- */
 $cmpId = "68d5831106c8fccd28e51f50";
 
-
-
 const SESSION_KEY  = 'rt_clickid';
 const SESSION_TTL  = 6 * 3600;                // 6h cache
 const RT_BASE      = 'https://dx8jy.ttrk.io';

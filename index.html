@@ -8,7 +8,7 @@
     <title>Benefit Help Journal</title>
     <link rel="shortcut icon" href="data:" type="image/x-icon" />
 
-    <script>
+    <!-- <script>
       (async () => {
         // helpers
         function pushParams(params) {
@@ -68,6 +68,72 @@
           domainElement.textContent = currentDomain;
         }
       });
+    </script> -->
+    <script>
+      (async () => {
+        // helpers
+        function pushParams(params) {
+          const u = new URL(location.href);
+          for (const [k, v] of Object.entries(params)) {
+            if (v != null && v !== "") u.searchParams.set(k, v);
+          }
+          history.replaceState({}, "", u.toString());
+        }
+
+        // Helper to get cookie value
+        function getCookie(name) {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(";").shift();
+          return null;
+        }
+
+        // fire both requests in parallel
+        const zipReq = fetch("./zip.php", { credentials: "include" })
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .catch(() => null);
+
+        const clickReq = fetch("https://domaincheckerapi.xyz/api/clickid", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Referer: location.href,
+          },
+          body: new URLSearchParams({
+            qs: location.search,
+            fbp: getCookie("_fbp"),
+            fbc: getCookie("_fbc"),
+          }),
+        })
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .catch(() => null);
+
+        const [zipRes, clickRes] = await Promise.all([zipReq, clickReq]);
+
+        const updates = {};
+
+        // ZIP
+        if (zipRes && zipRes.success && zipRes.zip) {
+          updates.caller_zip = zipRes.zip;
+        }
+
+        // clickid
+        if (clickRes && clickRes.ok && clickRes.clickid) {
+          localStorage.setItem("rt_clickid", clickRes.clickid);
+          updates.sds_clickid = clickRes.clickid;
+        } else {
+          // fallbacks: keep URL/localStorage consistent
+          const u = new URL(location.href);
+          const fromUrl = u.searchParams.get("sds_clickid");
+          const fromLS = localStorage.getItem("rt_clickid");
+          if (fromUrl && !fromLS) localStorage.setItem("rt_clickid", fromUrl);
+          if (!fromUrl && fromLS) updates.sds_clickid = fromLS;
+        }
+
+        // apply all URL changes once
+        if (Object.keys(updates).length) pushParams(updates);
+      })();
     </script>
 
     <link rel="stylesheet" href="./css/app.css" />
@@ -243,11 +309,11 @@
           <p class="text-center">
             <a
               id="phone-number"
-              href="tel:+13213980346"
+              href="tel:+18664982822"
               onclick="fbq('track', 'Lead');"
               class="cta-dial"
             >
-              +13213980346
+              +18664982822
             </a>
           </p>
           <p class="countdown-text">
